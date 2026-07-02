@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maombi ya Cheti cha Kuzaliwa</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--ink:#1f2a24;--paper:#f6f3ea;--line:#c9c2ad;--accent:#0f6b4c;--accent-deep:#0a4d37;--gold:#b8893f;--card:#ffffff;--danger:#a13c2f;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.5;padding-bottom:60px;}
+
+  /* ---------- SEHEMU YA FOMU (WATEJA) ---------- */
+  header.pubh{background:var(--accent-deep);color:#f6f3ea;padding:28px 20px 22px;text-align:center;border-bottom:4px solid var(--gold);}
+  header.pubh .eyebrow{font-family:'Trebuchet MS',sans-serif;letter-spacing:.18em;font-size:11px;text-transform:uppercase;color:#d8c9a3;margin-bottom:8px;}
+  header.pubh h1{margin:0;font-size:22px;font-weight:600;}
+  header.pubh p{font-family:'Trebuchet MS',sans-serif;font-size:13px;color:#cfe3d8;margin:8px 0 0;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px;}
+  .status-bar{position:sticky;top:0;z-index:5;background:#eef4ef;border-bottom:1px solid var(--line);padding:8px 16px;font-family:'Trebuchet MS',sans-serif;font-size:12.5px;text-align:center;color:#3c5346;}
+  .section{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+  .section-head{background:var(--accent);color:#fff;padding:12px 16px;font-family:'Trebuchet MS',sans-serif;font-size:14px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+  .section-head .num{font-family:Georgia,serif;font-weight:700;font-size:16px;background:rgba(255,255,255,.18);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .section-body{padding:16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:'Trebuchet MS',sans-serif;font-size:12.5px;color:#4a5750;margin-bottom:5px;font-weight:bold;}
+  .field input, .field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:5px;font-size:15px;font-family:'Trebuchet MS',sans-serif;background:#fbfaf6;color:var(--ink);}
+  .field input:focus, .field select:focus{outline:2px solid var(--accent);outline-offset:1px;background:#fff;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:420px){.row2{grid-template-columns:1fr;}}
+  .docs{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:24px;font-family:'Trebuchet MS',sans-serif;font-size:13.5px;}
+  .docs h3{margin:0 0 10px;font-family:Georgia,serif;font-size:15px;color:var(--accent-deep);}
+  .docs .instruction{margin:0 0 12px;color:#5c4720;font-weight:bold;}
+  .docs label.doc-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-weight:normal;}
+  button.big{border:none;border-radius:6px;padding:15px;font-family:'Trebuchet MS',sans-serif;font-size:15px;font-weight:bold;cursor:pointer;width:100%;}
+  .btn-submit{background:#1f8a52;color:#fff;}
+  .hint{text-align:center;font-family:'Trebuchet MS',sans-serif;font-size:12px;color:#7a7264;margin-top:6px;}
+  .req::after{content:" *";color:var(--danger);}
+
+  /* ---------- SEHEMU YA DASHBOARD (WEWE) ---------- */
+  body.admin-mode{font-family:'Trebuchet MS',sans-serif;}
+  .login-wrap{max-width:360px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:24px;}
+  .login-wrap h2{margin-top:0;font-family:Georgia,serif;color:var(--accent-deep);}
+  .login-wrap input{width:100%;padding:10px;margin-bottom:12px;border:1px solid var(--line);border-radius:5px;}
+  .login-wrap button{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
+  .login-err{color:#a13c2f;font-size:13px;margin-top:8px;}
+  header.adh{background:var(--accent-deep);color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid var(--gold);}
+  header.adh h1{margin:0;font-size:18px;font-family:Georgia,serif;}
+  header.adh button{background:transparent;border:1px solid #cfe3d8;color:#cfe3d8;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;}
+  .admin-wrap{max-width:1000px;margin:0 auto;padding:20px;}
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .toolbar input, .toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;}
+  .toolbar input{flex:1;min-width:180px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  th, td{text-align:left;padding:10px 12px;font-size:13px;border-bottom:1px solid #ece7d9;}
+  th{background:var(--accent);color:#fff;text-transform:uppercase;font-size:11px;letter-spacing:.04em;}
+  tr:hover{background:#f7f5ec;cursor:pointer;}
+  .badge{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:bold;}
+  .badge-draft{background:#fdecc8;color:#8a5b12;}
+  .badge-submitted{background:#d7ecdf;color:#0f6b4c;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(20,25,20,.55);z-index:20;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto;}
+  .modal{background:#fff;border-radius:8px;max-width:640px;width:100%;padding:20px;margin-top:20px;}
+  .modal h3{margin-top:0;font-family:Georgia,serif;color:var(--accent-deep);border-bottom:2px solid var(--gold);padding-bottom:8px;}
+  .modal .grp{margin-bottom:16px;}
+  .modal .grp h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;color:var(--accent);}
+  .modal .kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px;}
+  .modal .kv div span{color:#7a7264;display:block;font-size:11px;}
+  .modal-close{float:right;background:none;border:none;font-size:18px;cursor:pointer;color:#7a7264;}
+  .empty{text-align:center;padding:40px;color:#7a7264;font-style:italic;}
+</style>
+</head>
+<body>
+
+<!-- ================= FOMU YA WATEJA (public) ================= -->
+<div id="publicApp">
+  <header class="pubh">
+    <div class="eyebrow">RITA · Vizazi na Vifo</div>
+    <h1>Fomu ya Taarifa za Maombi</h1>
+    <p>Taarifa zako zinahifadhiwa moja kwa moja unapoendelea kujaza.</p>
+  </header>
+  <div class="status-bar" id="statusBar">Inajiandaa...</div>
+  <div class="wrap">
+
+    <div class="section">
+      <div class="section-head"><span class="num">1</span> Taarifa za Mtoto</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field"><label class="req">Jina la Kwanza</label><input id="c_first" type="text"></div>
+          <div class="field"><label>Jina la Kati</label><input id="c_middle" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="req">Jina la Ukoo</label><input id="c_last" type="text"></div>
+          <div class="field"><label>Majina Mengine</label><input id="c_other" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label class="req">Tarehe ya Kuzaliwa</label><input id="c_dob" type="date"></div>
+          <div class="field"><label class="req">Jinsia</label><select id="c_sex"><option value="">-- Chagua --</option><option>Me</option><option>Ke</option></select></div>
+        </div>
+        <div class="field"><label>Uzito wakati wa Kuzaliwa (kg)</label><input id="c_weight" type="text"></div>
+        <div class="field"><label>Namba ya Form Four (kama ipo)</label><input id="c_form4" type="text"></div>
+        <div class="row2">
+          <div class="field"><label>Aina ya Kitambulisho</label><input id="c_idtype" type="text" placeholder="mfano: NIDA, Not Available"></div>
+          <div class="field"><label>Namba ya Kitambulisho</label><input id="c_idno" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Mahali pa Kuzaliwa</label><select id="c_place"><option value="">-- Chagua --</option><option>Kituo cha Afya/Hospitali</option><option>Nyumbani</option></select></div>
+          <div class="field"><label>Jina la Hospitali</label><input id="c_hospital" type="text"></div>
+        </div>
+        <div class="field"><label>Aliyekuwepo Wakati wa Kujifungua</label><input id="c_present" type="text"></div>
+        <div class="row2">
+          <div class="field"><label>Mkoa wa Kuzaliwa</label><input id="c_reg_b" type="text"></div>
+          <div class="field"><label>Wilaya ya Kuzaliwa</label><input id="c_dist_b" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kata ya Kuzaliwa</label><input id="c_ward_b" type="text"></div>
+          <div class="field"><label>Mtaa wa Kuzaliwa</label><input id="c_street_b" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Mkoa wa Makazi</label><input id="c_reg_d" type="text"></div>
+          <div class="field"><label>Wilaya ya Makazi</label><input id="c_dist_d" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kata ya Makazi</label><input id="c_ward_d" type="text"></div>
+          <div class="field"><label>Mtaa wa Makazi</label><input id="c_street_d" type="text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="num">2</span> Taarifa za Mama</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field"><label class="req">Jina la Kwanza</label><input id="m_first" type="text"></div>
+          <div class="field"><label>Jina la Kati</label><input id="m_middle" type="text"></div>
+        </div>
+        <div class="field"><label class="req">Jina la Ukoo</label><input id="m_last" type="text"></div>
+        <div class="row2">
+          <div class="field"><label>Tarehe ya Kuzaliwa</label><input id="m_dob" type="date"></div>
+          <div class="field"><label class="req">Namba ya Simu</label><input id="m_phone" type="tel"></div>
+        </div>
+        <div class="field"><label>Barua Pepe</label><input id="m_email" type="email"></div>
+        <div class="row2">
+          <div class="field"><label>Kiwango cha Elimu</label><input id="m_edu" type="text"></div>
+          <div class="field"><label>Kazi</label><input id="m_job" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Aina ya Kitambulisho</label><input id="m_idtype" type="text"></div>
+          <div class="field"><label>Namba ya Kitambulisho</label><input id="m_idno" type="text"></div>
+        </div>
+        <div class="field"><label>NIN/NIDA Namba</label><input id="m_nin" type="text"></div>
+        <div class="field"><label>Namba ya Form Four (kama ipo)</label><input id="m_form4" type="text"></div>
+        <div class="field"><label>Je, Yu Hai?</label><select id="m_alive"><option>Ndiyo</option><option>Hapana</option></select></div>
+        <div class="row2">
+          <div class="field"><label>Mkoa wa Makazi</label><input id="m_reg_d" type="text"></div>
+          <div class="field"><label>Wilaya ya Makazi</label><input id="m_dist_d" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kata ya Makazi</label><input id="m_ward_d" type="text"></div>
+          <div class="field"><label>Mtaa wa Makazi/Kuzaliwa</label><input id="m_street" type="text"></div>
+        </div>
+        <hr style="border:none;border-top:1px dashed var(--line);margin:14px 0;">
+        <div class="row2">
+          <div class="field"><label>Idadi ya Mimba (jumla)</label><input id="m_preg_count" type="text"></div>
+          <div class="field"><label>Idadi ya Watoto Walio Hai</label><input id="m_children" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Idadi ya Uzazi Salama</label><input id="m_safe" type="text"></div>
+          <div class="field"><label>Vifo Kabla ya Kujifungua</label><input id="m_deaths" type="text"></div>
+        </div>
+        <div class="field"><label>Mwezi wa Ujauzito Alipojifungua</label><input id="m_month" type="text"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="num">3</span> Taarifa za Baba</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field"><label class="req">Jina la Kwanza</label><input id="f_first" type="text"></div>
+          <div class="field"><label>Jina la Kati</label><input id="f_middle" type="text"></div>
+        </div>
+        <div class="field"><label class="req">Jina la Ukoo</label><input id="f_last" type="text"></div>
+        <div class="row2">
+          <div class="field"><label>Tarehe ya Kuzaliwa</label><input id="f_dob" type="date"></div>
+          <div class="field"><label class="req">Namba ya Simu</label><input id="f_phone" type="tel"></div>
+        </div>
+        <div class="field"><label>Barua Pepe</label><input id="f_email" type="email"></div>
+        <div class="row2">
+          <div class="field"><label>Kiwango cha Elimu</label><input id="f_edu" type="text"></div>
+          <div class="field"><label>Kazi</label><input id="f_job" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Aina ya Kitambulisho</label><input id="f_idtype" type="text"></div>
+          <div class="field"><label>Namba ya Kitambulisho</label><input id="f_idno" type="text"></div>
+        </div>
+        <div class="field"><label>NIN</label><input id="f_nin" type="text"></div>
+        <div class="field"><label>Namba ya Form Four (kama ipo)</label><input id="f_form4" type="text"></div>
+        <div class="field"><label>Je, Yu Hai?</label><select id="f_alive"><option>Ndiyo</option><option>Hapana</option></select></div>
+        <div class="row2">
+          <div class="field"><label>Mkoa wa Makazi</label><input id="f_reg_d" type="text"></div>
+          <div class="field"><label>Wilaya ya Makazi</label><input id="f_dist_d" type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kata ya Makazi</label><input id="f_ward_d" type="text"></div>
+          <div class="field"><label>Mtaa wa Makazi</label><input id="f_street_d" type="text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs">
+      <h3>Nyaraka za Kuambatanisha</h3>
+      <p class="instruction">Chagua nyaraka MBILI TU kati ya zifuatazo:</p>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kadi ya kliniki ya mama"> Kadi ya kliniki ya mama</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kadi ya kliniki ya mtoto"> Kadi ya kliniki ya mtoto</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kitambulisho cha taifa cha mama au baba"> Kitambulisho cha taifa cha mama au baba</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kitambulisho cha mpiga kura cha mama au baba"> Kitambulisho cha mpiga kura cha mama au baba</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Passport ya kusafiria ya baba au mama"> Passport ya kusafiria ya baba au mama</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kitambulisho cha taifa cha mtoto"> Kitambulisho cha taifa cha mtoto</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Kitambulisho cha mpiga kura cha mtoto"> Kitambulisho cha mpiga kura cha mtoto</label>
+      <label class="doc-item"><input type="checkbox" class="docChk" value="Cheti cha kumaliza darasa la saba"> Cheti cha kumaliza darasa la saba</label>
+    </div>
+
+    <button class="big btn-submit" onclick="finalSubmit()">✅ Nimemaliza — Tuma Taarifa</button>
+    <p class="hint">Taarifa zinahifadhiwa moja kwa moja unapoendelea kujaza.</p>
+
+    <div class="section" id="sendOptions" style="display:none;">
+      <div class="section-head"><span class="num">✓</span> Tuma Nakala kwa Ofisi</div>
+      <div class="section-body">
+        <p class="hint" style="margin-top:0;margin-bottom:14px;">Taarifa zako zimehifadhiwa. Unaweza pia kutuma muhtasari kwa ofisi kupitia:</p>
+        <a id="waLink" class="big" style="display:block;text-align:center;text-decoration:none;background:#25D366;color:#fff;margin-bottom:10px;box-sizing:border-box;" target="_blank" rel="noopener">📱 Tuma kwa WhatsApp</a>
+        <a id="emailLink" class="big" style="display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;box-sizing:border-box;">✉️ Tuma kwa Barua Pepe</a>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:26px;">
+      <a href="#" onclick="goToAdminLogin();return false;" style="color:#9a9282;font-size:12px;text-decoration:underline;font-family:'Trebuchet MS',sans-serif;">Ingia kama Msimamizi (Admin)</a>
+    </p>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD (WEWE TU) ================= -->
+<div id="adminApp" style="display:none;">
+  <div id="loginScreen" class="login-wrap">
+    <h2>Ingia — Dashboard</h2>
+    <input id="loginEmail" type="email" placeholder="Barua pepe">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="doLogin()">Ingia</button>
+    <div class="login-err" id="loginErr"></div>
+    <p style="text-align:center;margin-top:14px;">
+      <a href="#" onclick="showPublicForm();return false;" style="color:#7a7264;font-size:12px;">← Rudi kwenye Fomu</a>
+    </p>
+  </div>
+
+  <div id="dashScreen" style="display:none;">
+    <header class="adh">
+      <h1>Dashboard — Maombi ya Vyeti vya Kuzaliwa</h1>
+      <button onclick="doLogout()">Toka</button>
+    </header>
+    <div class="admin-wrap">
+      <div class="toolbar">
+        <input id="searchBox" type="text" placeholder="Tafuta kwa jina la mtoto, mama, au baba...">
+        <select id="statusFilter">
+          <option value="">Zote</option>
+          <option value="draft">Bado (Draft)</option>
+          <option value="submitted">Zimetumwa</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>Kifaa</th><th>Jina la Mtoto</th><th>Mama</th><th>Baba</th><th>Hali</th><th>Ilisasishwa</th></tr></thead>
+        <tbody id="rowsBody"></tbody>
+      </table>
+      <div id="emptyMsg" class="empty" style="display:none;">Hakuna rekodi zinazolingana.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ================= WEKA HAPA TAARIFA ZA SUPABASE YAKO =================
+const SUPABASE_URL = "https://uneligvgjgsbjnzschxj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_72lpMbndOMFWAMW85Xyj2A_fqOgdtSb";
+// =========================================================================
+
+// ================= WEKA HAPA NAMBA/EMAIL YA KUPOKEA TAARIFA =================
+const OWNER_WHATSAPP = "255613554953"; // 0613554953 bila 0, ikiwa na msimbo wa nchi 255
+const OWNER_EMAIL = "WEKA-EMAIL-YAKO-HAPA@example.com"; // badilisha na email yako halisi
+// =========================================================================
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const isAdmin = new URLSearchParams(location.search).get("admin") !== null;
+
+/* =============== FOMU YA WATEJA =============== */
+const FIELD_IDS = ["c_first","c_middle","c_last","c_other","c_dob","c_sex","c_weight","c_form4","c_idtype","c_idno",
+  "c_place","c_hospital","c_present","c_reg_b","c_dist_b","c_ward_b","c_street_b",
+  "c_reg_d","c_dist_d","c_ward_d","c_street_d",
+  "m_first","m_middle","m_last","m_dob","m_phone","m_email","m_edu","m_job","m_idtype","m_idno","m_nin","m_form4",
+  "m_alive","m_reg_d","m_dist_d","m_ward_d","m_street","m_preg_count","m_children","m_safe","m_deaths","m_month",
+  "f_first","f_middle","f_last","f_dob","f_phone","f_email","f_edu","f_job","f_idtype","f_idno","f_nin","f_form4",
+  "f_alive","f_reg_d","f_dist_d","f_ward_d","f_street_d"];
+
+let deviceId = null;
+let saveTimer = null;
+
+function getOrCreateDeviceId(){
+  let id = localStorage.getItem("rita_device_id");
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+    localStorage.setItem("rita_device_id", id);
+  }
+  return id;
+}
+
+function setStatus(text){ const s = document.getElementById("statusBar"); if(s) s.textContent = text; }
+
+async function initPublicForm(){
+  deviceId = getOrCreateDeviceId();
+  setStatus("Inapakia...");
+  const { data, error } = await sb.rpc("get_application_by_code", { p_code: deviceId });
+  const row = (data && data.length) ? data[0] : null;
+  if(row){
+    FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(el && row[id] !== null && row[id] !== undefined) el.value = row[id];
+    });
+    if(row.docs_chosen){
+      const chosen = row.docs_chosen.split("|");
+      document.querySelectorAll(".docChk").forEach(chk => { if(chosen.includes(chk.value)) chk.checked = true; });
+    }
+    setStatus("Umeendelea ulipoishia. Taarifa zinahifadhiwa moja kwa moja.");
+  } else {
+    const { error: insErr } = await sb.from("birth_cert_applications").insert({ code: deviceId, status: "draft" });
+    if(insErr){ setStatus("Hitilafu ya kuunganisha. Angalia mtandao."); console.error(insErr); }
+    else { setStatus("Tayari kujaza — taarifa zitahifadhiwa moja kwa moja."); }
+  }
+}
+
+function collectValues(){
+  const obj = {};
+  FIELD_IDS.forEach(id => { const el = document.getElementById(id); if(el) obj[id] = el.value; });
+  const chosen = Array.from(document.querySelectorAll(".docChk:checked")).map(c => c.value);
+  obj.docs_chosen = chosen.join("|");
+  return obj;
+}
+
+async function saveDraft(){
+  if(!deviceId) return;
+  setStatus("Inahifadhi...");
+  const obj = collectValues();
+  const { error } = await sb.from("birth_cert_applications").update(obj).eq("code", deviceId);
+  if(error){ setStatus("Imeshindwa kuhifadhi. Angalia mtandao."); console.error(error); }
+  else { setStatus("Imehifadhiwa ✓ (" + new Date().toLocaleTimeString() + ")"); }
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 900);
+}
+
+async function finalSubmit(){
+  if(!deviceId) return;
+  const obj = collectValues();
+  obj.status = "submitted";
+  const { error } = await sb.from("birth_cert_applications").update(obj).eq("code", deviceId);
+  if(error){ alert("Imeshindwa kutuma. Jaribu tena."); return; }
+  showSendOptions(obj);
+}
+
+function buildSummaryText(obj){
+  const childName = [obj.c_first, obj.c_middle, obj.c_last].filter(Boolean).join(" ");
+  const motherName = [obj.m_first, obj.m_middle, obj.m_last].filter(Boolean).join(" ");
+  const fatherName = [obj.f_first, obj.f_middle, obj.f_last].filter(Boolean).join(" ");
+  const lines = [
+    "MAOMBI YA CHETI CHA KUZALIWA - RITA",
+    "Namba ya Kumbukumbu: " + deviceId,
+    "Jina la Mtoto: " + (childName || "-"),
+    "Tarehe ya Kuzaliwa: " + (obj.c_dob || "-"),
+    "Jinsia: " + (obj.c_sex || "-"),
+    "Jina la Mama: " + (motherName || "-"),
+    "Simu ya Mama: " + (obj.m_phone || "-"),
+    "Jina la Baba: " + (fatherName || "-"),
+    "Simu ya Baba: " + (obj.f_phone || "-"),
+    "Nyaraka Alizochagua: " + (obj.docs_chosen ? obj.docs_chosen.split("|").join(", ") : "-")
+  ];
+  return lines.join("\n");
+}
+
+function showSendOptions(obj){
+  document.querySelector(".btn-submit").style.display = "none";
+  const text = buildSummaryText(obj);
+  const encodedText = encodeURIComponent(text);
+  const subject = encodeURIComponent("Maombi ya Cheti cha Kuzaliwa - " + (obj.c_first || deviceId));
+
+  document.getElementById("waLink").href = "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodedText;
+  document.getElementById("emailLink").href = "mailto:" + OWNER_EMAIL + "?subject=" + subject + "&body=" + encodedText;
+  document.getElementById("sendOptions").style.display = "block";
+  document.getElementById("sendOptions").scrollIntoView({ behavior: "smooth", block: "start" });
+  setStatus("Asante! Taarifa zako zimetumwa ✓");
+}
+
+/* =============== DASHBOARD (ADMIN) =============== */
+let allRows = [];
+
+async function doLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPass").value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ document.getElementById("loginErr").textContent = "Barua pepe au password si sahihi."; return; }
+  showDash();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  document.getElementById("dashScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+}
+
+async function showDash(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("dashScreen").style.display = "block";
+  await loadRows();
+}
+
+async function loadRows(){
+  const { data, error } = await sb.from("birth_cert_applications").select("*").order("updated_at", { ascending:false });
+  if(error){ console.error(error); return; }
+  allRows = data || [];
+  renderRows();
+}
+
+function fullName(prefix, row){
+  return [row[prefix+"_first"], row[prefix+"_middle"], row[prefix+"_last"]].filter(Boolean).join(" ") || "—";
+}
+
+function renderRows(){
+  const q = document.getElementById("searchBox").value.toLowerCase();
+  const st = document.getElementById("statusFilter").value;
+  const body = document.getElementById("rowsBody");
+  body.innerHTML = "";
+  const filtered = allRows.filter(r => {
+    const matchesStatus = !st || r.status === st;
+    const text = (fullName("c",r) + " " + fullName("m",r) + " " + fullName("f",r)).toLowerCase();
+    return matchesStatus && text.includes(q);
+  });
+  document.getElementById("emptyMsg").style.display = filtered.length ? "none" : "block";
+  filtered.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.onclick = () => openModal(r);
+    const badge = r.status === "submitted" ? '<span class="badge badge-submitted">Imetumwa</span>' : '<span class="badge badge-draft">Bado</span>';
+    tr.innerHTML = `<td>${r.code.slice(0,8)}...</td><td>${fullName("c",r)}</td><td>${fullName("m",r)}</td><td>${fullName("f",r)}</td><td>${badge}</td><td>${new Date(r.updated_at).toLocaleString()}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+function kv(label, val){ return `<div><span>${label}</span>${val || "—"}</div>`; }
+
+function openModal(r){
+  const html = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>${r.status === 'submitted' ? 'Imetumwa' : 'Bado (Draft)'}</h3>
+    <div class="grp"><h4>Mtoto</h4><div class="kv">
+      ${kv("Jina Kamili", fullName("c",r))}${kv("Tarehe ya Kuzaliwa", r.c_dob)}${kv("Jinsia", r.c_sex)}${kv("Uzito", r.c_weight)}
+      ${kv("Form Four", r.c_form4)}${kv("Kitambulisho", (r.c_idtype||"") + " " + (r.c_idno||""))}${kv("Mahali pa Kuzaliwa", r.c_place)}${kv("Hospitali", r.c_hospital)}
+      ${kv("Kuzaliwa", [r.c_ward_b,r.c_dist_b,r.c_reg_b].filter(Boolean).join(", "))}
+      ${kv("Makazi", [r.c_street_d,r.c_ward_d,r.c_dist_d,r.c_reg_d].filter(Boolean).join(", "))}
+    </div></div>
+    <div class="grp"><h4>Mama</h4><div class="kv">
+      ${kv("Jina Kamili", fullName("m",r))}${kv("Simu", r.m_phone)}${kv("Email", r.m_email)}
+      ${kv("Kitambulisho", (r.m_idtype||"") + " " + (r.m_idno||""))}${kv("NIN/NIDA", r.m_nin)}${kv("Form Four", r.m_form4)}
+      ${kv("Makazi", [r.m_street,r.m_ward_d,r.m_dist_d,r.m_reg_d].filter(Boolean).join(", "))}
+      ${kv("Ujauzito", "Mimba:"+(r.m_preg_count||"-")+" Watoto:"+(r.m_children||"-")+" Salama:"+(r.m_safe||"-")+" Vifo:"+(r.m_deaths||"-")+" Mwezi:"+(r.m_month||"-"))}
+    </div></div>
+    <div class="grp"><h4>Baba</h4><div class="kv">
+      ${kv("Jina Kamili", fullName("f",r))}${kv("Simu", r.f_phone)}${kv("Email", r.f_email)}
+      ${kv("Kitambulisho", (r.f_idtype||"") + " " + (r.f_idno||""))}${kv("NIN", r.f_nin)}${kv("Form Four", r.f_form4)}
+      ${kv("Makazi", [r.f_street_d,r.f_ward_d,r.f_dist_d,r.f_reg_d].filter(Boolean).join(", "))}
+    </div></div>
+    <div class="grp"><h4>Nyaraka Alizochagua</h4><div class="kv">${kv("", (r.docs_chosen||"").split("|").filter(Boolean).join(", "))}</div></div>
+  `;
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modalBg").style.display = "flex";
+}
+
+function closeModal(){ document.getElementById("modalBg").style.display = "none"; }
+
+/* =============== KUBADILISHA KATI YA FOMU NA ADMIN =============== */
+function showAdminLogin(){
+  document.getElementById("publicApp").style.display = "none";
+  document.getElementById("adminApp").style.display = "block";
+  document.body.classList.add("admin-mode");
+  document.getElementById("loginScreen").style.display = "block";
+  document.getElementById("dashScreen").style.display = "none";
+}
+
+async function goToAdminLogin(){
+  showAdminLogin();
+  const { data } = await sb.auth.getSession();
+  if(data.session) showDash();
+}
+
+function showPublicForm(){
+  document.getElementById("adminApp").style.display = "none";
+  document.getElementById("publicApp").style.display = "block";
+  document.body.classList.remove("admin-mode");
+}
+
+/* =============== KUANZISHA UKURASA SAHIHI =============== */
+window.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("searchBox").addEventListener("input", renderRows);
+  document.getElementById("statusFilter").addEventListener("change", renderRows);
+
+  if(isAdmin){
+    goToAdminLogin();
+  } else {
+    await initPublicForm();
+    document.addEventListener("input", scheduleSave);
+    document.addEventListener("change", (e) => { if(e.target.classList.contains("docChk")) scheduleSave(); });
+  }
+});
+</script>
+
+</body>
+</html>
